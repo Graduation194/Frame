@@ -5,84 +5,123 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Upload your photo with 194 Graduation Frame</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     body {
-      background-color: #f8faff;
-      color: #003366;
-      font-family: Arial, sans-serif;
-      text-align: center;
+      background-color: #f0f4f8;
+      color: #1a2b4c;
+      font-family: 'Inter', sans-serif;
       margin: 0;
-      padding: 2rem;
+      padding: 0;
     }
-    h1 {
-      margin-bottom: 1.5rem;
+    header {
+      background-color: #003366;
+      padding: 2rem 1rem;
+      text-align: center;
+      color: white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    #canvas-container {
-      margin: 1rem auto;
-      width: 768px;
-      height: 768px;
-      position: relative;
-      border: 2px solid #003366;
-      background-color: white;
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 800;
+    }
+    main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
     }
     #controls {
-      margin-top: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
     }
     input[type="file"] {
-      margin-bottom: 1rem;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      cursor: pointer;
+    }
+    #canvas-container {
+      width: 768px;
+      height: 768px;
+      background-color: white;
+      border: 2px solid #003366;
+      border-radius: 12px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
     }
     button {
-      background-color: #003366;
+      background-color: #0074d9;
       color: white;
-      padding: 0.75rem 1.5rem;
+      padding: 0.75rem 2rem;
       border: none;
       font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
       cursor: pointer;
-      border-radius: 5px;
+      transition: background-color 0.3s ease;
     }
     button:hover {
-      background-color: #0055aa;
+      background-color: #005fa3;
     }
     .footer-text {
-      margin-top: 1rem;
-      font-size: 0.9rem;
-      color: #333;
+      margin-top: 2rem;
+      font-size: 0.95rem;
+      color: #4a4a4a;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <h1>Upload your photo with 194 Graduation Frame</h1>
-  <div id="canvas-container">
-    <canvas id="canvas" width="768" height="768"></canvas>
-  </div>
-  <div id="controls">
-    <input type="file" id="upload" accept="image/*" />
-    <br />
-    <button id="download">Download</button>
-  </div>
-  <div class="footer-text">Frame designed by Abdurrahman Mamdouh</div>
+  <header>
+    <h1>Upload your photo with 194 Graduation Frame</h1>
+  </header>
+  <main>
+    <div id="controls">
+      <input type="file" id="upload" accept="image/*" />
+    </div>
+    <div id="canvas-container">
+      <canvas id="canvas" width="768" height="768"></canvas>
+    </div>
+    <div id="controls">
+      <button id="download">Download</button>
+    </div>
+    <div class="footer-text">Frame designed by Abdurrahman Mamdouh</div>
+  </main>
 
   <script>
     const canvas = new fabric.Canvas('canvas', {
       backgroundColor: '#fff',
     });
 
-    // Load frame on top
-    fabric.Image.fromURL('frame.png', function(img) {
+    function resizeFrame(img) {
+      const scale = 768 / 2201;
       img.set({
+        scaleX: scale,
+        scaleY: scale,
         selectable: false,
         evented: false,
         left: 0,
         top: 0,
-        width: 768,
-        height: 768,
       });
-      canvas.frameImage = img;
-      canvas.add(img);
-      canvas.bringToFront(img);
+      return img;
+    }
+
+    fabric.Image.fromURL('frame.png', function(img) {
+      const frame = resizeFrame(img);
+      canvas.frameImage = frame;
+      canvas.add(frame);
+      canvas.bringToFront(frame);
     }, { crossOrigin: 'anonymous' });
 
-    // Upload photo
     document.getElementById('upload').addEventListener('change', function (e) {
       const reader = new FileReader();
       reader.onload = function (f) {
@@ -93,8 +132,6 @@
             scaleX: 768 / img.width,
             scaleY: 768 / img.height,
             hasControls: true,
-          });
-          img.set({
             lockUniScaling: true,
           });
           canvas.clear();
@@ -106,7 +143,6 @@
       reader.readAsDataURL(e.target.files[0]);
     });
 
-    // Download result
     document.getElementById('download').addEventListener('click', function () {
       const dataURL = canvas.toDataURL({ format: 'png' });
       const link = document.createElement('a');
