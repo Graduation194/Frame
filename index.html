@@ -101,7 +101,7 @@
       <input type="file" id="upload" accept="image/*" />
     </div>
     <div id="canvas-container">
-      <canvas id="canvas" width="768" height="768"></canvas>
+      <canvas id="canvas"></canvas>
     </div>
     <div id="controls">
       <button id="download">Download</button>
@@ -110,6 +110,14 @@
   </main>
 
   <script>
+    const canvasEl = document.getElementById('canvas');
+    const container = document.getElementById('canvas-container');
+
+    // تحديد الحجم المناسب للكانفس
+    let canvasSize = Math.min(container.offsetWidth, window.innerWidth * 0.95);
+    canvasEl.width = canvasSize;
+    canvasEl.height = canvasSize;
+
     const canvas = new fabric.Canvas('canvas', {
       backgroundColor: '#ffffff',
       preserveObjectStacking: true,
@@ -118,47 +126,51 @@
     const clipRect = new fabric.Rect({
       left: 0,
       top: 0,
-      width: 768,
-      height: 768,
+      width: canvasSize,
+      height: canvasSize,
       absolutePositioned: true
     });
 
-    // Load and clip user image
+    function loadFrame() {
+      fabric.Image.fromURL('frame.png', function(img) {
+        img.set({
+          left: 0,
+          top: 0,
+          scaleX: canvasSize / img.width,
+          scaleY: canvasSize / img.height,
+          selectable: false,
+          evented: false
+        });
+        canvas.frameImage = img;
+        canvas.add(img);
+        img.moveTo(9999);
+      }, { crossOrigin: 'anonymous' });
+    }
+
+    function loadImage(url) {
+      fabric.Image.fromURL(url, function(img) {
+        img.scaleToWidth(canvasSize);
+        img.scaleToHeight(canvasSize);
+        img.set({
+          left: 0,
+          top: 0,
+          clipPath: clipRect,
+          hasControls: true,
+          lockUniScaling: true,
+        });
+        canvas.add(img);
+        canvas.sendToBack(img);
+        if (canvas.frameImage) canvas.bringToFront(canvas.frameImage);
+      }, { crossOrigin: 'anonymous' });
+    }
+
     document.getElementById('upload').addEventListener('change', function (e) {
       const reader = new FileReader();
       reader.onload = function (f) {
-        fabric.Image.fromURL(f.target.result, function(img) {
-          img.scaleToWidth(768);
-          img.scaleToHeight(768);
-          img.set({
-            left: 0,
-            top: 0,
-            clipPath: clipRect,
-            hasControls: true,
-            lockUniScaling: true,
-          });
-          canvas.add(img);
-          canvas.sendToBack(img);
-          if (canvas.frameImage) canvas.bringToFront(canvas.frameImage);
-        }, { crossOrigin: 'anonymous' });
+        loadImage(f.target.result);
       };
       reader.readAsDataURL(e.target.files[0]);
     });
-
-    // Load frame and force it to fit canvas
-    fabric.Image.fromURL('frame.png', function(img) {
-      img.set({
-        left: 0,
-        top: 0,
-        scaleX: 768 / img.width,
-        scaleY: 768 / img.height,
-        selectable: false,
-        evented: false
-      });
-      canvas.frameImage = img;
-      canvas.add(img);
-      img.moveTo(9999);
-    }, { crossOrigin: 'anonymous' });
 
     document.getElementById('download').addEventListener('click', function () {
       canvas.discardActiveObject();
@@ -169,6 +181,8 @@
       link.download = 'graduation_frame.png';
       link.click();
     });
+
+    loadFrame();
   </script>
 </body>
 </html>
