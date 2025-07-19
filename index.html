@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload your photo with 194 Graduation Frame</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+  <style>
+    body {
+      background-color: #f8faff;
+      color: #003366;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1 {
+      margin-bottom: 1.5rem;
+    }
+    #canvas-container {
+      margin: 1rem auto;
+      width: 768px;
+      height: 768px;
+      position: relative;
+      border: 2px solid #003366;
+      background-color: white;
+    }
+    #controls {
+      margin-top: 1.5rem;
+    }
+    input[type="file"] {
+      margin-bottom: 1rem;
+    }
+    button {
+      background-color: #003366;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background-color: #0055aa;
+    }
+    .footer-text {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>Upload your photo with 194 Graduation Frame</h1>
+  <div id="canvas-container">
+    <canvas id="canvas" width="768" height="768"></canvas>
+  </div>
+  <div id="controls">
+    <input type="file" id="upload" accept="image/*" />
+    <br />
+    <button id="download">Download</button>
+  </div>
+  <div class="footer-text">Frame designed by Abdurrahman Mamdouh</div>
+
+  <script>
+    const canvas = new fabric.Canvas('canvas', {
+      backgroundColor: '#fff',
+    });
+
+    // Load frame on top
+    fabric.Image.fromURL('frame.png', function(img) {
+      img.set({
+        selectable: false,
+        evented: false,
+        left: 0,
+        top: 0,
+        width: 768,
+        height: 768,
+      });
+      canvas.frameImage = img;
+      canvas.add(img);
+      canvas.bringToFront(img);
+    }, { crossOrigin: 'anonymous' });
+
+    // Upload photo
+    document.getElementById('upload').addEventListener('change', function (e) {
+      const reader = new FileReader();
+      reader.onload = function (f) {
+        fabric.Image.fromURL(f.target.result, function(img) {
+          img.set({
+            left: 0,
+            top: 0,
+            scaleX: 768 / img.width,
+            scaleY: 768 / img.height,
+            hasControls: true,
+          });
+          img.set({
+            lockUniScaling: true,
+          });
+          canvas.clear();
+          canvas.add(img);
+          canvas.add(canvas.frameImage);
+          canvas.bringToFront(canvas.frameImage);
+        }, { crossOrigin: 'anonymous' });
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    });
+
+    // Download result
+    document.getElementById('download').addEventListener('click', function () {
+      const dataURL = canvas.toDataURL({ format: 'png' });
+      const link = document.createElement('a');
+      link.href = dataURL;
+      link.download = 'graduation_frame.png';
+      link.click();
+    });
+  </script>
+</body>
+</html>
