@@ -110,31 +110,34 @@
   </main>
 
   <script>
+    const canvasSize = 768;
     const canvas = new fabric.Canvas('canvas', {
       backgroundColor: '#ffffff',
       preserveObjectStacking: true,
     });
 
-    function resizeFrame(img) {
-      const scale = 768 / 2201;
+    // Resize and fit image to canvas size exactly
+    function fitImageToCanvas(img) {
       img.set({
-        scaleX: scale,
-        scaleY: scale,
-        selectable: false,
-        evented: false,
         left: 0,
         top: 0,
+        scaleX: canvasSize / img.width,
+        scaleY: canvasSize / img.height,
+        selectable: false,
+        evented: false
       });
       return img;
     }
 
+    // Load frame and fit it exactly to canvas
     fabric.Image.fromURL('frame.png', function(img) {
-      const frame = resizeFrame(img);
+      const frame = fitImageToCanvas(img);
       canvas.frameImage = frame;
       canvas.add(frame);
       canvas.frameImage.moveTo(9999);
     }, { crossOrigin: 'anonymous' });
 
+    // Load user image and put it under the frame
     document.getElementById('upload').addEventListener('change', function (e) {
       const reader = new FileReader();
       reader.onload = function (f) {
@@ -142,12 +145,13 @@
           img.set({
             left: 0,
             top: 0,
-            scaleX: 768 / img.width,
-            scaleY: 768 / img.height,
+            scaleX: canvasSize / img.width,
+            scaleY: canvasSize / img.height,
             hasControls: true,
             lockUniScaling: true,
           });
           canvas.add(img);
+          canvas.sendToBack(img);
           canvas.bringToFront(canvas.frameImage);
         }, { crossOrigin: 'anonymous' });
       };
