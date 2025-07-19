@@ -116,6 +116,7 @@
       backgroundColor: '#ffffff',
       preserveObjectStacking: true,
     });
+    canvas.allowTouchScrolling = true;
 
     let frameImage = null;
     let userImage = null;
@@ -185,7 +186,7 @@
         });
 
         canvas.add(img);
-        canvas.setActiveObject(img); // ضروري علشان pinch-to-zoom يشتغل
+        canvas.setActiveObject(img);
         canvas.sendToBack(img);
         if (frameImage) canvas.bringToFront(frameImage);
         resizeCanvas();
@@ -229,20 +230,26 @@
       link.click();
     });
 
-    // 🔥 دعم التكبير/التصغير باللمس
+    // دعم التكبير/التصغير باللمس (pinch to zoom)
+    let lastScale = 1;
     canvas.on('touch:gesture', function(opt) {
+      const e = opt.e;
+      if (!e.touches || e.touches.length !== 2) return;
+
       const obj = canvas.getActiveObject();
-      if (obj && opt.e.touches && opt.e.touches.length === 2) {
-        const delta = opt.self.scale;
-        const newScale = obj.scaleX * delta;
+      if (!obj) return;
 
-        const minScale = 0.2;
-        const maxScale = 5;
+      if (opt.self.state === 'start') {
+        lastScale = obj.scaleX || 1;
+      }
 
-        if (newScale >= minScale && newScale <= maxScale) {
-          obj.scale(newScale);
-          canvas.requestRenderAll();
-        }
+      const newScale = lastScale * opt.self.scale;
+      const minScale = 0.2;
+      const maxScale = 5;
+
+      if (newScale >= minScale && newScale <= maxScale) {
+        obj.scale(newScale);
+        canvas.requestRenderAll();
       }
     });
 
