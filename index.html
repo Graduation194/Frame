@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upload your photo with 194 Graduation Frame</title>
+  <title>Upload your photo with 194 Graduation Frame 🎓</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
   <style>
@@ -185,7 +185,7 @@
         });
 
         canvas.add(img);
-        canvas.setActiveObject(img);
+        canvas.setActiveObject(img); // ضروري علشان pinch-to-zoom يشتغل
         canvas.sendToBack(img);
         if (frameImage) canvas.bringToFront(frameImage);
         resizeCanvas();
@@ -229,12 +229,20 @@
       link.click();
     });
 
+    // 🔥 دعم التكبير/التصغير باللمس
     canvas.on('touch:gesture', function(opt) {
       const obj = canvas.getActiveObject();
-      if (opt.e.touches && opt.e.touches.length === 2 && obj) {
+      if (obj && opt.e.touches && opt.e.touches.length === 2) {
         const delta = opt.self.scale;
-        obj.scale(obj.scaleX * delta);
-        canvas.requestRenderAll();
+        const newScale = obj.scaleX * delta;
+
+        const minScale = 0.2;
+        const maxScale = 5;
+
+        if (newScale >= minScale && newScale <= maxScale) {
+          obj.scale(newScale);
+          canvas.requestRenderAll();
+        }
       }
     });
 
