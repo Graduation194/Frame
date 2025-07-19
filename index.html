@@ -5,26 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Upload your photo with 194 Graduation Frame</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
-      background-color: #f0f4f8;
-      color: #1a2b4c;
-      font-family: 'Inter', sans-serif;
+      background-color: #f5f0e6;
+      color: #2f1a23;
+      font-family: 'Open Sans', sans-serif;
       margin: 0;
       padding: 0;
     }
     header {
-      background-color: #003366;
-      padding: 2rem 1rem;
+      background-color: #2f1a23;
+      padding: 1.5rem 1rem;
       text-align: center;
-      color: white;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      color: #f5f0e6;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
     header h1 {
       margin: 0;
       font-size: 2rem;
-      font-weight: 800;
+      font-weight: 700;
+      font-family: 'Playfair Display', serif;
     }
     main {
       display: flex;
@@ -38,45 +42,53 @@
     }
     input[type="file"] {
       padding: 0.6rem;
-      font-size: 1rem;
+      font-size: 0.95rem;
       border: 1px solid #ccc;
-      border-radius: 8px;
-      background-color: white;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      border-radius: 6px;
+      background-color: #fff;
+      color: #2f1a23;
       cursor: pointer;
+      width: 100%;
+      max-width: 400px;
     }
     #canvas-container {
-      width: 768px;
-      height: 768px;
-      background-color: white;
-      border: 2px solid #003366;
-      border-radius: 12px;
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 768px;
+      aspect-ratio: 1 / 1;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 10px;
       overflow: hidden;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     }
     canvas {
       display: block;
-      margin: 0 auto;
+      width: 100% !important;
+      height: auto !important;
     }
     button {
-      background-color: #0074d9;
+      background-color: #2f1a23;
       color: white;
       padding: 0.75rem 2rem;
       border: none;
       font-size: 1rem;
       font-weight: 600;
+      font-family: 'Open Sans', sans-serif;
       border-radius: 8px;
       cursor: pointer;
       transition: background-color 0.3s ease;
+      margin-top: 2rem;
     }
     button:hover {
-      background-color: #005fa3;
+      background-color: #442b34;
     }
     .footer-text {
-      margin-top: 2rem;
-      font-size: 0.95rem;
-      color: #4a4a4a;
+      margin-top: 2.5rem;
+      font-size: 0.75rem;
+      color: #888;
       text-align: center;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 400;
     }
   </style>
 </head>
@@ -99,7 +111,8 @@
 
   <script>
     const canvas = new fabric.Canvas('canvas', {
-      backgroundColor: '#fff',
+      backgroundColor: '#ffffff',
+      preserveObjectStacking: true,
     });
 
     function resizeFrame(img) {
@@ -119,7 +132,7 @@
       const frame = resizeFrame(img);
       canvas.frameImage = frame;
       canvas.add(frame);
-      canvas.bringToFront(frame);
+      canvas.frameImage.moveTo(9999);
     }, { crossOrigin: 'anonymous' });
 
     document.getElementById('upload').addEventListener('change', function (e) {
@@ -134,9 +147,7 @@
             hasControls: true,
             lockUniScaling: true,
           });
-          canvas.clear();
           canvas.add(img);
-          canvas.add(canvas.frameImage);
           canvas.bringToFront(canvas.frameImage);
         }, { crossOrigin: 'anonymous' });
       };
@@ -144,6 +155,8 @@
     });
 
     document.getElementById('download').addEventListener('click', function () {
+      canvas.discardActiveObject();
+      canvas.renderAll();
       const dataURL = canvas.toDataURL({ format: 'png' });
       const link = document.createElement('a');
       link.href = dataURL;
