@@ -158,32 +158,7 @@
     });
 
     document.getElementById('download').addEventListener('click', function () {
-      if (!frameImage) return;
-
-      const exportCanvas = new fabric.StaticCanvas(null, {
-        width: frameImage.width,
-        height: frameImage.height
-      });
-
-      if (userImage) {
-        const clonedUser = fabric.util.object.clone(userImage);
-        clonedUser.scaleToWidth(frameImage.width);
-        clonedUser.set({ left: 0, top: 0 });
-        exportCanvas.add(clonedUser);
-      }
-
-      const clonedFrame = fabric.util.object.clone(frameImage);
-      clonedFrame.scaleToWidth(frameImage.width);
-      clonedFrame.set({ left: 0, top: 0, selectable: false, evented: false });
-      exportCanvas.add(clonedFrame);
-
-      exportCanvas.renderAll();
-
-      const dataURL = exportCanvas.toDataURL({
-        format: 'png',
-        multiplier: 1
-      });
-
+      const dataURL = canvas.toDataURL({ format: 'png', multiplier: 3 });
       const link = document.createElement('a');
       link.href = dataURL;
       link.download = 'graduation_frame.png';
