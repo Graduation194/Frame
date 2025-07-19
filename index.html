@@ -110,53 +110,55 @@
   </main>
 
   <script>
-    const canvasSize = 768;
     const canvas = new fabric.Canvas('canvas', {
       backgroundColor: '#ffffff',
       preserveObjectStacking: true,
     });
 
-    // Force image to fill canvas exactly
-    function stretchToFitCanvas(img) {
-      img.set({
-        left: 0,
-        top: 0,
-        scaleX: canvas.width / img.width,
-        scaleY: canvas.height / img.height,
-        selectable: false,
-        evented: false
-      });
-      return img;
-    }
+    const clipRect = new fabric.Rect({
+      left: 0,
+      top: 0,
+      width: 768,
+      height: 768,
+      absolutePositioned: true
+    });
 
-    // Load frame and stretch it perfectly
-    fabric.Image.fromURL('frame.png', function(img) {
-      const frame = stretchToFitCanvas(img);
-      canvas.frameImage = frame;
-      canvas.add(frame);
-      canvas.frameImage.moveTo(9999);
-    }, { crossOrigin: 'anonymous' });
-
-    // Load user image and stretch it perfectly
+    // Load and clip user image
     document.getElementById('upload').addEventListener('change', function (e) {
       const reader = new FileReader();
       reader.onload = function (f) {
         fabric.Image.fromURL(f.target.result, function(img) {
+          img.scaleToWidth(768);
+          img.scaleToHeight(768);
           img.set({
             left: 0,
             top: 0,
-            scaleX: canvas.width / img.width,
-            scaleY: canvas.height / img.height,
+            clipPath: clipRect,
             hasControls: true,
             lockUniScaling: true,
           });
           canvas.add(img);
           canvas.sendToBack(img);
-          canvas.bringToFront(canvas.frameImage);
+          if (canvas.frameImage) canvas.bringToFront(canvas.frameImage);
         }, { crossOrigin: 'anonymous' });
       };
       reader.readAsDataURL(e.target.files[0]);
     });
+
+    // Load frame and force it to fit canvas
+    fabric.Image.fromURL('frame.png', function(img) {
+      img.set({
+        left: 0,
+        top: 0,
+        scaleX: 768 / img.width,
+        scaleY: 768 / img.height,
+        selectable: false,
+        evented: false
+      });
+      canvas.frameImage = img;
+      canvas.add(img);
+      img.moveTo(9999);
+    }, { crossOrigin: 'anonymous' });
 
     document.getElementById('download').addEventListener('click', function () {
       canvas.discardActiveObject();
