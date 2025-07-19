@@ -1,232 +1,144 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upload your photo with 194 Graduation Frame</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      background-color: #f5f0e6;
-      color: #2f1a23;
-      font-family: 'Open Sans', sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background-color: #2f1a23;
-      padding: 1.5rem 1rem;
-      text-align: center;
-      color: #f5f0e6;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    }
-    header h1 {
-      margin: 0;
-      font-size: 2rem;
-      font-weight: 700;
-      font-family: 'Playfair Display', serif;
-    }
-    main {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem 1rem;
-    }
-    #controls {
-      margin-bottom: 1.5rem;
-      text-align: center;
-    }
-    input[type="file"] {
-      padding: 0.6rem;
-      font-size: 0.95rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      background-color: #fff;
-      color: #2f1a23;
-      cursor: pointer;
-      width: 100%;
-      max-width: 400px;
-    }
-    #canvas-container {
-      width: 100%;
-      max-width: 768px;
-      aspect-ratio: 1 / 1;
-      background-color: #fff;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    }
-    canvas {
-      display: block;
-      width: 100% !important;
-      height: auto !important;
-    }
-    button {
-      background-color: #2f1a23;
-      color: white;
-      padding: 0.75rem 2rem;
-      border: none;
-      font-size: 1rem;
-      font-weight: 600;
-      font-family: 'Open Sans', sans-serif;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      margin-top: 2rem;
-    }
-    button:hover {
-      background-color: #442b34;
-    }
-    .footer-text {
-      margin-top: 0.75rem;
-      font-size: 0.75rem;
-      color: #888;
-      text-align: center;
-      font-family: 'Open Sans', sans-serif;
-      font-weight: 400;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Upload your photo with 194 Graduation Frame</h1>
-  </header>
-  <main>
-    <div id="controls">
-      <input type="file" id="upload" accept="image/*" />
-    </div>
-    <div id="canvas-container">
-      <canvas id="canvas"></canvas>
-    </div>
-    <div id="controls">
-      <button id="download">Download</button>
-    </div>
-    <div class="footer-text">Frame designed by Abdurrahman Mamdouh</div>
-  </main>
+<script>
+  const canvasEl = document.getElementById('canvas');
+  const container = document.getElementById('canvas-container');
+  const DEFAULT_CANVAS_SIZE = 768;
 
-  <script>
-    const canvasEl = document.getElementById('canvas');
-    const container = document.getElementById('canvas-container');
+  const canvas = new fabric.Canvas('canvas', {
+    backgroundColor: '#ffffff',
+    preserveObjectStacking: true,
+  });
 
-    let canvas = new fabric.Canvas('canvas', {
-      backgroundColor: '#ffffff',
-      preserveObjectStacking: true,
-    });
+  let frameImage = null;
+  let userImage = null;
+  let frameOriginalWidth = DEFAULT_CANVAS_SIZE;
+  let frameOriginalHeight = DEFAULT_CANVAS_SIZE;
 
-    let frameImage = null;
-    let userImage = null;
+  function resizeCanvas() {
+    const size = Math.min(container.offsetWidth, window.innerWidth * 0.95);
+    canvasEl.width = size;
+    canvasEl.height = size;
+    canvas.setWidth(size);
+    canvas.setHeight(size);
 
-    function resizeCanvas() {
-      const size = Math.min(container.offsetWidth, window.innerWidth * 0.95);
-      canvasEl.width = size;
-      canvasEl.height = size;
-      canvas.setWidth(size);
-      canvas.setHeight(size);
-
-      if (frameImage) {
-        frameImage.set({
-          scaleX: size / frameImage._originalWidth,
-          scaleY: size / frameImage._originalHeight
-        });
-      }
-
-      if (userImage) {
-        userImage.set({
-          scaleX: size / userImage._originalWidth,
-          scaleY: size / userImage._originalHeight
-        });
-      }
-
-      canvas.renderAll();
+    if (frameImage) {
+      frameImage.scaleToWidth(size);
     }
 
-    function loadFrame() {
-      fabric.Image.fromURL('frame.png', function(img) {
-        frameImage = img;
-        frameImage._originalWidth = img.width;
-        frameImage._originalHeight = img.height;
-        frameImage.set({
-          left: 0,
-          top: 0,
-          selectable: false,
-          evented: false,
-        });
-        canvas.add(frameImage);
-        resizeCanvas();
-      }, { crossOrigin: 'anonymous' });
+    if (userImage) {
+      const scale = size / userImage._originalWidth;
+      userImage.scale(scale);
     }
 
-    function loadUserImage(url) {
-      fabric.Image.fromURL(url, function(img) {
-        if (userImage) canvas.remove(userImage);
-        userImage = img;
-        userImage._originalWidth = img.width;
-        userImage._originalHeight = img.height;
-        const size = canvas.getWidth();
+    canvas.renderAll();
+  }
 
-        userImage.set({
-          left: 0,
-          top: 0,
-          scaleX: size / img.width,
-          scaleY: size / img.height,
-          lockUniScaling: true,
-          hasControls: true,
-          hasBorders: true,
-          cornerStyle: 'circle',
-          clipPath: new fabric.Rect({
-            left: 0,
-            top: 0,
-            width: size,
-            height: size,
-            absolutePositioned: true
-          })
-        });
+  function loadFrame() {
+    fabric.Image.fromURL('frame.png', function(img) {
+      frameImage = img;
+      frameOriginalWidth = img.width;
+      frameOriginalHeight = img.height;
 
-        canvas.add(userImage);
-        canvas.setActiveObject(userImage);
-        canvas.sendToBack(userImage);
-        if (frameImage) canvas.bringToFront(frameImage);
-        resizeCanvas();
-      }, { crossOrigin: 'anonymous' });
-    }
-
-    document.getElementById('upload').addEventListener('change', function (e) {
-      const reader = new FileReader();
-      reader.onload = function (f) {
-        loadUserImage(f.target.result);
-      };
-      reader.readAsDataURL(e.target.files[0]);
-    });
-
-    document.getElementById('download').addEventListener('click', function () {
-      canvas.discardActiveObject();
-      canvas.renderAll();
-      const dataURL = canvas.toDataURL({
-        format: 'png',
-        multiplier: 3 // جودة عالية
+      img.set({
+        left: 0,
+        top: 0,
+        selectable: false,
+        evented: false
       });
-      const link = document.createElement('a');
-      link.href = dataURL;
-      link.download = 'graduation_frame.png';
-      link.click();
+
+      img.scaleToWidth(canvas.getWidth());
+      canvas.add(img);
+      canvas.sendToBack(img);
+      resizeCanvas();
+    }, { crossOrigin: 'anonymous' });
+  }
+
+  function loadUserImage(url) {
+    fabric.Image.fromURL(url, function(img) {
+      if (userImage) canvas.remove(userImage);
+
+      userImage = img;
+      userImage._originalWidth = img.width;
+      userImage._originalHeight = img.height;
+
+      const scale = canvas.getWidth() / img.width;
+      img.scale(scale);
+
+      img.set({
+        left: 0,
+        top: 0,
+        hasControls: true,
+        lockUniScaling: true,
+        lockRotation: true,
+        cornerStyle: 'circle',
+        borderColor: '#2f1a23',
+        cornerColor: '#2f1a23',
+        transparentCorners: false,
+        clipPath: new fabric.Rect({
+          left: 0,
+          top: 0,
+          width: canvas.getWidth(),
+          height: canvas.getHeight(),
+          absolutePositioned: true
+        })
+      });
+
+      canvas.add(img);
+      canvas.setActiveObject(img);
+      canvas.sendToBack(img);
+      if (frameImage) canvas.bringToFront(frameImage);
+    }, { crossOrigin: 'anonymous' });
+  }
+
+  document.getElementById('upload').addEventListener('change', function (e) {
+    const reader = new FileReader();
+    reader.onload = function (f) {
+      loadUserImage(f.target.result);
+    };
+    reader.readAsDataURL(e.target.files[0]);
+  });
+
+  document.getElementById('download').addEventListener('click', function () {
+    canvas.discardActiveObject();
+    canvas.renderAll();
+
+    // نحفظ الحجم الأصلي
+    const originalWidth = canvas.getWidth();
+    const originalHeight = canvas.getHeight();
+
+    // نحول الكانفس لدقة الفريم
+    canvas.setWidth(frameOriginalWidth);
+    canvas.setHeight(frameOriginalHeight);
+    canvas.setZoom(frameOriginalWidth / originalWidth);
+
+    canvas.renderAll();
+
+    const dataURL = canvas.toDataURL({
+      format: 'png',
+      multiplier: 1
     });
 
-    canvas.on('touch:gesture', function(opt) {
-      const obj = canvas.getActiveObject();
-      if (opt.e.touches && opt.e.touches.length === 2 && obj) {
-        const delta = opt.self.scale;
-        obj.scale(obj.scaleX * delta);
-        canvas.requestRenderAll();
-      }
-    });
+    // نرجع الكانفس للحجم العادي
+    canvas.setZoom(1);
+    canvas.setWidth(originalWidth);
+    canvas.setHeight(originalHeight);
+    resizeCanvas();
 
-    window.addEventListener('resize', resizeCanvas);
-    loadFrame();
-  </script>
-</body>
-</html>
+    // تحميل الصورة
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = 'graduation_frame.png';
+    link.click();
+  });
+
+  canvas.on('touch:gesture', function(opt) {
+    const obj = canvas.getActiveObject();
+    if (opt.e.touches && opt.e.touches.length === 2 && obj) {
+      const delta = opt.self.scale;
+      obj.scale(obj.scaleX * delta);
+      canvas.requestRenderAll();
+    }
+  });
+
+  window.addEventListener('resize', resizeCanvas);
+  loadFrame();
+</script>
