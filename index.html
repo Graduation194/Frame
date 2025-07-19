@@ -18,9 +18,7 @@
   <script src="https://hammerjs.github.io/dist/hammer.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     body {
       background-color: #f5f0e6;
       color: #2f1a23;
@@ -125,49 +123,35 @@
     const container = document.getElementById('canvas-container');
     const canvas = new fabric.Canvas('canvas', {
       backgroundColor: '#ffffff',
-      preserveObjectStacking: true,
+      preserveObjectStacking: true
     });
-
-    canvas.allowTouchScrolling = true;
 
     let frameImage = null;
     let userImage = null;
 
     function resizeCanvas() {
       const size = Math.min(container.offsetWidth, window.innerWidth * 0.95);
-      canvasEl.width = size;
-      canvasEl.height = size;
       canvas.setWidth(size);
       canvas.setHeight(size);
-
-      if (frameImage) {
-        frameImage.set({
-          scaleX: size / frameImage._originalWidth,
-          scaleY: size / frameImage._originalHeight
-        });
-      }
-
-      if (userImage) {
-        const scale = size / userImage._originalWidth;
-        userImage.scale(scale);
-      }
-
+      canvasEl.width = size;
+      canvasEl.height = size;
+      if (frameImage) frameImage.scaleToWidth(size);
+      if (userImage && userImage._originalScale) userImage.scale(userImage._originalScale);
       canvas.renderAll();
     }
 
     function loadFrame() {
       fabric.Image.fromURL('frame.png', function(img) {
         frameImage = img;
-        frameImage._originalWidth = img.width;
-        frameImage._originalHeight = img.height;
-        img.set({
-          left: 0,
-          top: 0,
+        frameImage.set({
           selectable: false,
           evented: false,
+          left: 0,
+          top: 0
         });
-        canvas.add(img);
-        resizeCanvas();
+        frameImage.scaleToWidth(canvas.getWidth());
+        canvas.add(frameImage);
+        canvas.renderAll();
       }, { crossOrigin: 'anonymous' });
     }
 
@@ -175,33 +159,21 @@
       fabric.Image.fromURL(url, function(img) {
         if (userImage) canvas.remove(userImage);
         userImage = img;
-        userImage._originalWidth = img.width;
-        userImage._originalHeight = img.height;
-        const size = canvas.getWidth();
-
-        const scale = size / img.width;
-        img.scale(scale);
-        img.set({
+        userImage.set({
           left: 0,
           top: 0,
-          lockUniScaling: true,
           hasControls: true,
           hasBorders: true,
-          cornerStyle: 'circle',
-          clipPath: new fabric.Rect({
-            left: 0,
-            top: 0,
-            width: size,
-            height: size,
-            absolutePositioned: true
-          })
+          lockUniScaling: true
         });
-
-        canvas.add(img);
-        canvas.setActiveObject(img);
-        canvas.sendToBack(img);
+        const scale = canvas.getWidth() / img.width;
+        userImage._originalScale = scale;
+        userImage.scale(scale);
+        canvas.add(userImage);
+        canvas.setActiveObject(userImage);
+        canvas.sendToBack(userImage);
         if (frameImage) canvas.bringToFront(frameImage);
-        resizeCanvas();
+        canvas.renderAll();
       }, { crossOrigin: 'anonymous' });
     }
 
@@ -214,64 +186,33 @@
     });
 
     document.getElementById('download').addEventListener('click', function () {
-      canvas.discardActiveObject();
-      canvas.renderAll();
-
-      const originalWidth = canvas.getWidth();
-      const originalHeight = canvas.getHeight();
-
-      canvas.setWidth(frameImage._originalWidth);
-      canvas.setHeight(frameImage._originalHeight);
-      canvas.setZoom(frameImage._originalWidth / originalWidth);
-      canvas.renderAll();
-
-      const dataURL = canvas.toDataURL({
-        format: 'png',
-        multiplier: 1
-      });
-
-      canvas.setZoom(1);
-      canvas.setWidth(originalWidth);
-      canvas.setHeight(originalHeight);
-      resizeCanvas();
-      canvas.renderAll();
-
+      if (typeof gtag === 'function') {
+        gtag('event', 'download_clicked', {
+          event_category: 'Interaction',
+          event_label: 'User clicked download button'
+        });
+      }
+      const dataURL = canvas.toDataURL({ format: 'png', multiplier: 2 });
       const link = document.createElement('a');
       link.href = dataURL;
       link.download = 'graduation_frame.png';
       link.click();
-
-      // 🔥 إرسال حدث إلى Google Analytics عند الضغط على Download
-      gtag('event', 'download_clicked', {
-        event_category: 'Interaction',
-        event_label: 'User clicked download button'
-      });
     });
 
-    let lastScale = 1;
-    canvas.on('touch:gesture', function(opt) {
-      const e = opt.e;
-      if (!e.touches || e.touches.length !== 2) return;
-
+    const mc = new Hammer(canvasEl);
+    mc.get('pinch').set({ enable: true });
+    mc.on('pinchmove', function (ev) {
       const obj = canvas.getActiveObject();
       if (!obj) return;
-
-      if (opt.self.state === 'start') {
-        lastScale = obj.scaleX || 1;
-      }
-
-      const newScale = lastScale * opt.self.scale;
-      const minScale = 0.2;
-      const maxScale = 5;
-
-      if (newScale >= minScale && newScale <= maxScale) {
-        obj.scale(newScale);
-        canvas.requestRenderAll();
-      }
+      let newScale = (obj._originalScale || obj.scaleX) * ev.scale;
+      newScale = Math.max(0.2, Math.min(5, newScale));
+      obj.scale(newScale);
+      canvas.requestRenderAll();
     });
 
     window.addEventListener('resize', resizeCanvas);
     loadFrame();
+    resizeCanvas();
   </script>
 </body>
 </html>
