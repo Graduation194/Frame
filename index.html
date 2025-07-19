@@ -135,10 +135,8 @@
       }
 
       if (userImage) {
-        userImage.set({
-          scaleX: size / userImage._originalWidth,
-          scaleY: size / userImage._originalHeight
-        });
+        const scale = size / userImage._originalWidth;
+        userImage.scale(scale);
       }
 
       canvas.renderAll();
@@ -169,11 +167,10 @@
         const size = canvas.getWidth();
 
         const scale = size / img.width;
-        userImage.set({
+        img.scale(scale);
+        img.set({
           left: 0,
           top: 0,
-          scaleX: scale,
-          scaleY: scale,
           lockUniScaling: true,
           hasControls: true,
           hasBorders: true,
@@ -187,9 +184,9 @@
           })
         });
 
-        canvas.add(userImage);
-        canvas.setActiveObject(userImage);
-        canvas.sendToBack(userImage);
+        canvas.add(img);
+        canvas.setActiveObject(img);
+        canvas.sendToBack(img);
         if (frameImage) canvas.bringToFront(frameImage);
         resizeCanvas();
       }, { crossOrigin: 'anonymous' });
