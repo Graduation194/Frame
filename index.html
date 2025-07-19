@@ -112,8 +112,7 @@
   <script>
     const canvasEl = document.getElementById('canvas');
     const container = document.getElementById('canvas-container');
-
-    let canvas = new fabric.Canvas('canvas', {
+    const canvas = new fabric.Canvas('canvas', {
       backgroundColor: '#ffffff',
       preserveObjectStacking: true,
     });
@@ -150,13 +149,13 @@
         frameImage = img;
         frameImage._originalWidth = img.width;
         frameImage._originalHeight = img.height;
-        frameImage.set({
+        img.set({
           left: 0,
           top: 0,
           selectable: false,
           evented: false,
         });
-        canvas.add(frameImage);
+        canvas.add(img);
         resizeCanvas();
       }, { crossOrigin: 'anonymous' });
     }
@@ -169,11 +168,12 @@
         userImage._originalHeight = img.height;
         const size = canvas.getWidth();
 
+        const scale = size / img.width;
         userImage.set({
           left: 0,
           top: 0,
-          scaleX: size / img.width,
-          scaleY: size / img.height,
+          scaleX: scale,
+          scaleY: scale,
           lockUniScaling: true,
           hasControls: true,
           hasBorders: true,
@@ -206,10 +206,26 @@
     document.getElementById('download').addEventListener('click', function () {
       canvas.discardActiveObject();
       canvas.renderAll();
+
+      const originalWidth = canvas.getWidth();
+      const originalHeight = canvas.getHeight();
+
+      canvas.setWidth(frameImage._originalWidth);
+      canvas.setHeight(frameImage._originalHeight);
+      canvas.setZoom(frameImage._originalWidth / originalWidth);
+      canvas.renderAll();
+
       const dataURL = canvas.toDataURL({
         format: 'png',
-        multiplier: 3 // جودة عالية
+        multiplier: 1
       });
+
+      canvas.setZoom(1);
+      canvas.setWidth(originalWidth);
+      canvas.setHeight(originalHeight);
+      resizeCanvas();
+      canvas.renderAll();
+
       const link = document.createElement('a');
       link.href = dataURL;
       link.download = 'graduation_frame.png';
