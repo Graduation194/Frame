@@ -83,7 +83,7 @@
       background-color: #442b34;
     }
     .footer-text {
-      margin-top: 2.5rem;
+      margin-top: 0.75rem;
       font-size: 0.75rem;
       color: #888;
       text-align: center;
@@ -113,61 +113,92 @@
     const canvasEl = document.getElementById('canvas');
     const container = document.getElementById('canvas-container');
 
-    // تحديد الحجم المناسب للكانفس
-    let canvasSize = Math.min(container.offsetWidth, window.innerWidth * 0.95);
-    canvasEl.width = canvasSize;
-    canvasEl.height = canvasSize;
-
-    const canvas = new fabric.Canvas('canvas', {
+    let canvas = new fabric.Canvas('canvas', {
       backgroundColor: '#ffffff',
       preserveObjectStacking: true,
     });
 
-    const clipRect = new fabric.Rect({
-      left: 0,
-      top: 0,
-      width: canvasSize,
-      height: canvasSize,
-      absolutePositioned: true
-    });
+    let frameImage = null;
+    let userImage = null;
+
+    function resizeCanvas() {
+      const size = Math.min(container.offsetWidth, window.innerWidth * 0.95);
+      canvasEl.width = size;
+      canvasEl.height = size;
+      canvas.setWidth(size);
+      canvas.setHeight(size);
+
+      if (frameImage) {
+        frameImage.set({
+          scaleX: size / frameImage._originalWidth,
+          scaleY: size / frameImage._originalHeight
+        });
+      }
+
+      if (userImage) {
+        userImage.set({
+          scaleX: size / userImage._originalWidth,
+          scaleY: size / userImage._originalHeight
+        });
+      }
+
+      canvas.renderAll();
+    }
 
     function loadFrame() {
       fabric.Image.fromURL('frame.png', function(img) {
-        img.set({
+        frameImage = img;
+        frameImage._originalWidth = img.width;
+        frameImage._originalHeight = img.height;
+        frameImage.set({
           left: 0,
           top: 0,
-          scaleX: canvasSize / img.width,
-          scaleY: canvasSize / img.height,
           selectable: false,
-          evented: false
+          evented: false,
         });
-        canvas.frameImage = img;
-        canvas.add(img);
-        img.moveTo(9999);
+        canvas.add(frameImage);
+        resizeCanvas();
       }, { crossOrigin: 'anonymous' });
     }
 
-    function loadImage(url) {
+    function loadUserImage(url) {
       fabric.Image.fromURL(url, function(img) {
-        img.scaleToWidth(canvasSize);
-        img.scaleToHeight(canvasSize);
-        img.set({
+        if (userImage) canvas.remove(userImage);
+        userImage = img;
+        userImage._originalWidth = img.width;
+        userImage._originalHeight = img.height;
+        const size = canvas.getWidth();
+
+        userImage.set({
           left: 0,
           top: 0,
-          clipPath: clipRect,
-          hasControls: true,
+          scaleX: size / img.width,
+          scaleY: size / img.height,
           lockUniScaling: true,
+          hasControls: true,
+          hasBorders: true,
+          cornerStyle: 'circle',
+          clipPath: new fabric.Rect({
+            left: 0,
+            top: 0,
+            width: size,
+            height: size,
+            absolutePositioned: true
+          })
         });
-        canvas.add(img);
-        canvas.sendToBack(img);
-        if (canvas.frameImage) canvas.bringToFront(canvas.frameImage);
+
+        canvas.add(userImage);
+        canvas.setActiveObject(userImage);
+        canvas.sendToBack(userImage);
+        if (frameImage) canvas.bringToFront(frameImage);
+        resizeCanvas();
       }, { crossOrigin: 'anonymous' });
     }
 
     document.getElementById('upload').addEventListener('change', function (e) {
       const reader = new FileReader();
       reader.onload = function (f) {
-        loadImage(f.target.result);
+        loadUserImage(f.target.result);
       };
       reader.readAsDataURL(e.target.files[0]);
     });
@@ -175,13 +206,26 @@
     document.getElementById('download').addEventListener('click', function () {
       canvas.discardActiveObject();
       canvas.renderAll();
-      const dataURL = canvas.toDataURL({ format: 'png' });
+      const dataURL = canvas.toDataURL({
+        format: 'png',
+        multiplier: 3 // جودة عالية
+      });
       const link = document.createElement('a');
       link.href = dataURL;
       link.download = 'graduation_frame.png';
       link.click();
     });
 
+    canvas.on('touch:gesture', function(opt) {
+      const obj = canvas.getActiveObject();
+      if (opt.e.touches && opt.e.touches.length === 2 && obj) {
+        const delta = opt.self.scale;
+        obj.scale(obj.scaleX * delta);
+        canvas.requestRenderAll();
+      }
+    });
+
+    window.addEventListener('resize', resizeCanvas);
     loadFrame();
   </script>
 </body>
