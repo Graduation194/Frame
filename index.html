@@ -240,6 +240,12 @@
       link.href = dataURL;
       link.download = 'graduation_frame.png';
       link.click();
+
+      // 🔥 إرسال حدث إلى Google Analytics عند الضغط على Download
+      gtag('event', 'download_clicked', {
+        event_category: 'Interaction',
+        event_label: 'User clicked download button'
+      });
     });
 
     let lastScale = 1;
